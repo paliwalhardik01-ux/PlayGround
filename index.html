@@ -24,7 +24,7 @@
         <div class="mission-head">
           <div>
             <div class="eyebrow"><span class="eyebrow-line"></span> PRECISION DRIVING</div>
-            <h1>Normal <em>car parking.</em></h1>
+            <h1>Driver <em>training.</em></h1>
             <p class="subtitle" id="levelSubtitle">Learn the lot. Master every car.</p>
           </div>
           <div class="level-chip"><span>LEVEL</span><strong id="levelNumber">01</strong><span class="level-total">/ 50</span></div>
@@ -34,7 +34,7 @@
           <canvas id="gameCanvas" aria-label="Interactive 3D parking lot"></canvas>
           <div class="scene-label"><span class="map-pin">⌖</span> NORTH LOT <span class="label-divider">/</span> TRAINING GROUNDS</div>
           <div class="scene-hint" id="sceneHint"><span class="hint-key">W</span><span class="hint-key">A</span><span class="hint-key">S</span><span class="hint-key">D</span> TO DRIVE</div>
-          <div class="scene-tools"><button id="cameraButton" class="camera-button" aria-label="Change camera view">◉ <span>CAMERA</span></button></div>
+          <div class="scene-tools"><button id="cameraButton" class="camera-button" aria-label="Camera view: DRIVER. Click to change." title="Cycle camera (C)">◉ <span>DRIVER</span></button></div>
           <div class="toast" id="toast" aria-live="polite"></div>
           <div class="level-complete" id="levelComplete" aria-live="polite">
             <div class="complete-icon">✓</div><div class="complete-kicker" id="completeKicker">NICE PARKING</div><h2 id="completeTitle">Right on the mark.</h2><p id="completeText">Clean finish.</p><button id="nextButton" class="primary-button">NEXT LEVEL <span>→</span></button>
@@ -63,10 +63,11 @@
         <div class="guide-head"><span class="guide-icon">⌁</span><span>HOW TO DRIVE</span></div>
         <div class="key-guide">
           <div class="key-row"><span class="keycap wide">W</span><span>Accelerate</span><span class="keycap">↑</span></div>
-          <div class="key-row"><span class="keycap wide">S</span><span>Reverse</span><span class="keycap">↓</span></div>
+          <div class="key-row"><span class="keycap wide">S</span><span>Brake / reverse</span><span class="keycap">↓</span></div>
           <div class="key-row"><span class="keycap wide">A</span><span>Steer left</span><span class="keycap">←</span></div>
           <div class="key-row"><span class="keycap wide">D</span><span>Steer right</span><span class="keycap">→</span></div>
           <div class="key-row"><span class="keycap space">SPACE</span><span>Handbrake</span></div>
+          <div class="key-row"><span class="keycap wide">C</span><span>Change camera</span></div>
         </div>
         <div class="tip-card"><span class="tip-spark">✳</span><div><strong>TAKE YOUR TIME</strong><p>Line up with the bay and finish slowly. New cars unlock as you progress.</p></div></div>
         <div class="garage">
