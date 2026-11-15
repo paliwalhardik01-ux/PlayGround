@@ -36,7 +36,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   let unlockedCars = Math.max(1, Math.min(carSpecs.length, highestLevel + 1));
   let selectedCar = Math.max(0, Math.min(unlockedCars - 1, Number(saved.selectedCar) || 0));
   let levelIndex = 0, player, elapsed = 0, bumps = 0, completed = false, paused = false;
-  let parkingProgress = 0, toastTimer = 0, soundOn = false, audioContext, cameraTop = false;
+  let parkingProgress = 0, toastTimer = 0, soundOn = false, audioContext, cameraMode = 1;
   let lastTime = performance.now();
 
   const scene = new THREE.Scene();
@@ -74,7 +74,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const fill = new THREE.DirectionalLight(0xb7d7e8, .65); fill.position.set(12, 8, -8); scene.add(fill);
   const lot = new THREE.Group(); scene.add(lot);
   const staticColliders = [];
-  let targetMarker, playerRoot, playerModel;
+  let targetMarker, playerRoot, playerModel, cockpitModel;
   const obstacles = [];
   const cones = [];
 
@@ -95,6 +95,17 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     const top = new THREE.Mesh(new THREE.IcosahedronGeometry(.55,1),mat(0x78906a)); top.position.set(.13,2.1,-.08); top.castShadow=true; tree.add(top);
   }
   function addLine(x,z,sx,sz,material=paintMat,y=.025) { box(lot,x,y,z,sx,.025,sz,material,false,true); }
+  function addLotSign() {
+    const group=new THREE.Group();group.position.set(12.85,0,-4.8);group.rotation.y=-Math.PI/2;lot.add(group);
+    for(const z of [-.7,.7])box(group,0,1.05,z,.12,2.1,.12,trimMat);
+    box(group,0,1.9,0,.18,1.15,2.15,mat(0x263531,.48,.1));
+    const art=document.createElement('canvas');art.width=512;art.height=256;
+    const ctx=art.getContext('2d');ctx.fillStyle='#263531';ctx.fillRect(0,0,512,256);ctx.strokeStyle='#c8f36a';ctx.lineWidth=7;ctx.strokeRect(14,14,484,228);
+    ctx.fillStyle='#c8f36a';ctx.font='700 54px Manrope, sans-serif';ctx.textAlign='center';ctx.fillText('PARK IT',256,112);
+    ctx.fillStyle='#e7eee2';ctx.font='500 23px monospace';ctx.fillText('DRIVER TRAINING',256,163);ctx.fillText('NORTH LOT  •  50 LEVELS',256,202);
+    const texture=new THREE.CanvasTexture(art);texture.colorSpace=THREE.SRGBColorSpace;
+    const face=new THREE.Mesh(new THREE.PlaneGeometry(2.02,.99),new THREE.MeshBasicMaterial({map:texture}));face.position.set(.101,1.9,0);face.rotation.y=Math.PI/2;group.add(face);
+  }
 
   function addCarModel(spec, isPlayer=false) {
     const scale=spec.size || 1;
@@ -147,6 +158,24 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     }
     group.userData.length=L; group.userData.width=W; return group;
   }
+  function addCockpit(spec) {
+    const dims={hatch:[2.45,1.18,1.35],sedan:[2.8,1.13,1.34],crossover:[2.65,1.32,1.52],offroad:[2.8,1.42,1.58],suv:[2.95,1.45,1.62],luxury:[3.05,1.39,1.65],boxy:[2.86,1.5,1.62]}[spec.kind] || [2.7,1.25,1.5];
+    const width=dims[2]*spec.size;
+    const interior=new THREE.Group();
+    const dash=mat(0x252d2b,.58), soft=mat(0x46514b,.65), highlight=mat(0xc8f36a,.35,.1);
+    box(interior,.32,.91,0,.42,.18,width*.94,dash,false,false);
+    box(interior,.61,.8,0,.72,.12,width*.8,mat(spec.color,.4,.12),false,false);
+    box(interior,.08,1.02,0,.11,.08,width*.88,soft,false,false);
+    const wheel=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,8,24),soft);
+    wheel.rotation.y=Math.PI/2;wheel.position.set(-.03,1.01,-width*.22);interior.add(wheel);
+    const hub=new THREE.Mesh(new THREE.SphereGeometry(.055,10,8),highlight);hub.position.set(-.03,1.01,-width*.22);interior.add(hub);
+    for(let i=0;i<3;i++) {
+      const spoke=box(interior,-.03,1.01,-width*.22,.035,.23,.025,soft,false,false);
+      spoke.rotation.x=i*Math.PI*2/3;
+    }
+    box(interior,.04,1.2,0,.075,.09,width*.8,soft,false,false);
+    return interior;
+  }
 
   function clearLot() {
     lot.clear(); staticColliders.length=0; obstacles.length=0; cones.length=0;
@@ -179,6 +208,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     }
     // Quiet edge landscaping and corner markers.
     for(const x of [-13.25,13.25]) for(const z of [-7.8,7.8]) cylinder(lot,x,.23,z,.22,.46,mat(0xe7845d),8);
+    addLotSign();
     buildLevelObjects();
   }
   function addObstacle(x,z,specIndex,colorOverride) {
@@ -259,13 +289,21 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   }
   function setupPlayerModel() {
     if(playerRoot) scene.remove(playerRoot);
-    playerRoot=new THREE.Group();playerModel=addCarModel(carSpecs[selectedCar],true);playerRoot.add(playerModel);scene.add(playerRoot);
-    syncPlayer();
+    playerRoot=new THREE.Group();playerModel=addCarModel(carSpecs[selectedCar],true);cockpitModel=addCockpit(carSpecs[selectedCar]);
+    playerRoot.add(playerModel,cockpitModel);scene.add(playerRoot);
+    syncPlayer();updateCameraVisibility();
+  }
+  function updateCameraVisibility() {
+    if(playerModel)playerModel.visible=cameraMode!==1&&(!player||player.bumpFlash<=0);
+    if(cockpitModel)cockpitModel.visible=cameraMode===1;
+    const names=['CHASE','DRIVER','TOP'];
+    ui.camera.setAttribute('aria-label',`Camera view: ${names[cameraMode]}. Click to change.`);
+    ui.camera.innerHTML=`◉ <span>${names[cameraMode]}</span>`;
   }
   function syncPlayer() { if(playerRoot&&player){playerRoot.position.set(player.x,0,player.z);playerRoot.rotation.y=-player.angle;} }
   function setupLevel(resetBumps=false) {
     if(resetBumps)bumps=0;
-    player={x:-10.8,z:0,angle:0,v:0,bumpFlash:0};elapsed=0;parkingProgress=0;completed=false;paused=false;
+    player={x:-10.8,z:0,angle:0,v:0,steer:0,bumpFlash:0};elapsed=0;parkingProgress=0;completed=false;paused=false;
     ui.level.textContent=String(levelIndex+1).padStart(2,'0');
     ui.subtitle.textContent=`${levelName(levelIndex)} — ${levelHint(levelIndex)}`;
     ui.complete.classList.remove('show');ui.pause.textContent='Ⅱ';ui.hint.classList.remove('hidden');
@@ -328,13 +366,19 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
       const right=keys.has('d')||keys.has('arrowright')||keys.has('right');
       const brake=keys.has(' ')||keys.has('brake');
       const before={x:player.x,z:player.z,angle:player.angle};
-      const throttle=(forward?1:0)-(reverse?1:0);
-      const vehicleFactor=1/(carSpecs[selectedCar].size*.55);
-      if(throttle)player.v+=throttle*4.4*vehicleFactor*dt;else player.v*=Math.pow(.985,dt*60);
-      if(brake)player.v*=Math.pow(.84,dt*60);
-      player.v=Math.max(-2.2,Math.min(5.8/Math.sqrt(carSpecs[selectedCar].size),player.v));
-      const steer=(right?1:0)-(left?1:0);
-      player.angle+=steer*Math.min(Math.abs(player.v)/1.25,1)*1.45*dt*(player.v<0?-1:1);
+      const steerInput=(right?1:0)-(left?1:0);
+      const sizeFactor=1/Math.sqrt(carSpecs[selectedCar].size);
+      const braking=reverse||brake;
+      if(braking&&player.v>.04)player.v=Math.max(0,player.v-(brake?10:8.5)*dt);
+      else if(forward&&player.v<-.04)player.v=Math.min(0,player.v+8.5*dt);
+      else if(reverse&&player.v<=.04)player.v=Math.max(-2.9,player.v-2.8*sizeFactor*dt);
+      else if(forward&&player.v>=-.04)player.v=Math.min(6.6*sizeFactor,player.v+4.4*sizeFactor*dt);
+      else player.v*=Math.pow(brake?.91:.985,dt*60);
+      player.steer+=(steerInput-player.steer)*Math.min(1,dt*8);
+      const speed=Math.abs(player.v), handbrake=keys.has(' ')||keys.has('brake');
+      const yawRate=handbrake?1.15:0.28+Math.min(speed,4.5)*.24;
+      player.angle+=player.steer*yawRate*dt*(player.v<-.04?-1:1);
+      if(handbrake)player.v*=Math.pow(.965,dt*60);
       player.x+=Math.cos(player.angle)*player.v*dt;
       player.z+=Math.sin(player.angle)*player.v*dt;
       player.bumpFlash=Math.max(0,player.bumpFlash-dt);
@@ -345,7 +389,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
       } else checkParking(dt);
       if(Math.abs(player.v)>.2)ui.hint.classList.add('hidden');
       syncPlayer();
-      if(playerModel)playerModel.visible=player.bumpFlash<=0||Math.floor(player.bumpFlash*16)%2===0;
+      if(playerModel)playerModel.visible=cameraMode!==1&&(player.bumpFlash<=0||Math.floor(player.bumpFlash*16)%2===0);
+      if(cockpitModel)cockpitModel.visible=cameraMode===1;
     }
     if(toastTimer>0){toastTimer-=dt*1000;if(toastTimer<=0)ui.toast.classList.remove('show');}
     updateDashboard();
@@ -355,17 +400,30 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     const aspect=canvas.clientWidth/Math.max(1,canvas.clientHeight);
     if(canvas.width!==Math.round(canvas.clientWidth*renderer.getPixelRatio())||canvas.height!==Math.round(canvas.clientHeight*renderer.getPixelRatio()))renderer.setSize(canvas.clientWidth,canvas.clientHeight,false);
     camera.aspect=aspect;camera.updateProjectionMatrix();
-    const followX=player?player.x*.1:0,followZ=player?player.z*.08:0;
-    desiredCamera.set(followX,cameraTop?31:25,cameraTop?1.5:23+followZ);
-    camera.position.lerp(desiredCamera,.035);cameraTarget.set(followX,0,followZ*.45);camera.lookAt(cameraTarget);
+    if(cameraMode===1&&player&&playerRoot) {
+      const width=playerModel?.userData.width||1.4;
+      const driverPos=playerRoot.localToWorld(new THREE.Vector3(-.12,1.31,-width*.2));
+      const forwardX=Math.cos(player.angle),forwardZ=Math.sin(player.angle);
+      camera.position.lerp(driverPos,.38);
+      cameraTarget.set(driverPos.x+forwardX*18,driverPos.y+.08,driverPos.z+forwardZ*18);
+      camera.lookAt(cameraTarget);
+    } else {
+      const followX=player?player.x:0,followZ=player?player.z:0;
+      if(cameraMode===2)desiredCamera.set(followX,31,followZ+1.5);
+      else if(player)desiredCamera.set(player.x-Math.cos(player.angle)*15,9.5,player.z-Math.sin(player.angle)*15);
+      else desiredCamera.set(0,25,23);
+      camera.position.lerp(desiredCamera,cameraMode===2?.07:.065);
+      cameraTarget.set(followX,.65,followZ);camera.lookAt(cameraTarget);
+    }
     renderer.render(scene,camera);
   }
   function loop(now) {const dt=Math.min((now-lastTime)/1000,.04);lastTime=now;update(dt);render(now);requestAnimationFrame(loop);}
   function togglePause(){if(completed)return;paused=!paused;ui.pause.textContent=paused?'▶':'Ⅱ';showToast(paused?'PAUSED — PRESS SPACE TO RESUME':'BACK TO THE LOT',1100);updateDashboard();}
+  function cycleCamera(){cameraMode=(cameraMode+1)%3;updateCameraVisibility();showToast(`${['CHASE','DRIVER','TOP'][cameraMode]} CAMERA`,850);}
 
   window.addEventListener('keydown',event=>{
     const key=event.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))event.preventDefault();keys.add(key);
-    if(key===' '&&!event.repeat&&paused)togglePause();if(key==='r'&&!event.repeat)setupLevel(true);if((key==='escape'||key==='p')&&!event.repeat)togglePause();
+    if(key===' '&&!event.repeat&&paused)togglePause();if(key==='r'&&!event.repeat)setupLevel(true);if(key==='c'&&!event.repeat)cycleCamera();if((key==='escape'||key==='p')&&!event.repeat)togglePause();
   });
   window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
   document.querySelectorAll('[data-control]').forEach(button=>{
@@ -377,7 +435,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   ui.restart.addEventListener('click',()=>setupLevel(true));ui.pause.addEventListener('click',togglePause);
   ui.next.addEventListener('click',()=>{levelIndex=levelIndex===MAX_LEVELS-1?0:Math.min(levelIndex+1,highestLevel);setupLevel(true);});
   ui.sound.addEventListener('click',()=>{soundOn=!soundOn;ui.sound.classList.toggle('sound-on',soundOn);ui.sound.innerHTML=`♫ <span>${soundOn?'ON':'SOUND'}</span>`;if(soundOn)playTone(520,.08);});
-  ui.camera.addEventListener('click',()=>{cameraTop=!cameraTop;showToast(cameraTop?'TOP-DOWN CAMERA':'DRIVER CAMERA',850);});
+  ui.camera.addEventListener('click',cycleCamera);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)keys.clear();});
   renderGarage();setupLevel(true);requestAnimationFrame(loop);
 })();
