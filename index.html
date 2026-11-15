@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101a20">
-  <title>Park It — Precision Parking</title>
+  <link rel="icon" href="data:,">
+  <title>Park It — 3D Parking School</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,33 +15,34 @@
   <main class="game-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Park It home"><span class="brand-mark">P</span><span>PARK<span class="brand-light">IT</span></span></a>
-      <div class="top-meta"><span class="live-dot"></span> DRIVER TRAINING / 01</div>
+      <div class="top-meta"><span class="live-dot"></span> 3D DRIVER TRAINING / 50</div>
       <button class="sound-button" id="soundButton" aria-label="Toggle sound" title="Toggle sound">♫ <span>SOUND</span></button>
     </header>
 
-    <section class="game-layout" aria-label="Parking game">
+    <section class="game-layout" aria-label="3D parking game">
       <div class="game-main">
         <div class="mission-head">
           <div>
             <div class="eyebrow"><span class="eyebrow-line"></span> PRECISION DRIVING</div>
             <h1>Normal <em>car parking.</em></h1>
-            <p class="subtitle">Easy does it. Get in the bay, keep it clean.</p>
+            <p class="subtitle" id="levelSubtitle">Learn the lot. Master every car.</p>
           </div>
-          <div class="level-chip"><span>LEVEL</span><strong id="levelNumber">01</strong><span class="level-total">/ 03</span></div>
+          <div class="level-chip"><span>LEVEL</span><strong id="levelNumber">01</strong><span class="level-total">/ 50</span></div>
         </div>
 
         <div class="scene-wrap" id="sceneWrap">
-          <canvas id="gameCanvas" aria-label="Top-down parking lot game"></canvas>
+          <canvas id="gameCanvas" aria-label="Interactive 3D parking lot"></canvas>
           <div class="scene-label"><span class="map-pin">⌖</span> NORTH LOT <span class="label-divider">/</span> TRAINING GROUNDS</div>
           <div class="scene-hint" id="sceneHint"><span class="hint-key">W</span><span class="hint-key">A</span><span class="hint-key">S</span><span class="hint-key">D</span> TO DRIVE</div>
+          <div class="scene-tools"><button id="cameraButton" class="camera-button" aria-label="Change camera view">◉ <span>CAMERA</span></button></div>
           <div class="toast" id="toast" aria-live="polite"></div>
           <div class="level-complete" id="levelComplete" aria-live="polite">
-            <div class="complete-icon">✓</div><div class="complete-kicker">NICE PARKING</div><h2>Right on the mark.</h2><p id="completeText">Clean finish.</p><button id="nextButton" class="primary-button">NEXT LEVEL <span>→</span></button>
+            <div class="complete-icon">✓</div><div class="complete-kicker" id="completeKicker">NICE PARKING</div><h2 id="completeTitle">Right on the mark.</h2><p id="completeText">Clean finish.</p><button id="nextButton" class="primary-button">NEXT LEVEL <span>→</span></button>
           </div>
         </div>
 
         <div class="bottom-bar">
-          <div class="objective"><span class="objective-icon">◎</span><div><span class="objective-label">OBJECTIVE</span><strong>Park in the highlighted bay</strong></div></div>
+          <div class="objective"><span class="objective-icon">◎</span><div><span class="objective-label">OBJECTIVE</span><strong id="objectiveText">Park in the highlighted bay</strong></div></div>
           <div class="bottom-actions"><button class="text-button" id="restartButton"><span class="restart-icon">↻</span> RESTART</button><button class="pause-button" id="pauseButton" aria-label="Pause game">Ⅱ</button></div>
         </div>
       </div>
@@ -49,7 +51,7 @@
         <div class="dash-top"><span class="dash-label">DASHBOARD</span><span class="dash-state"><i></i><span id="statusText">READY</span></span></div>
         <div class="speed-panel">
           <div class="speed-label">CURRENT SPEED <span>KM/H</span></div>
-          <div class="speed-reading"><span id="speedValue">0</span><span class="speed-unit">KM/H</span></div>
+          <div class="speed-reading"><span id="speedValue">00</span><span class="speed-unit">KM/H</span></div>
           <div class="speed-track"><div id="speedFill"></div><span></span><span></span><span></span><span></span></div>
           <div class="gear-row"><span>GEAR</span><strong id="gearValue">P</strong><span class="gear-caption" id="gearCaption">PARKED</span></div>
         </div>
@@ -64,9 +66,13 @@
           <div class="key-row"><span class="keycap wide">S</span><span>Reverse</span><span class="keycap">↓</span></div>
           <div class="key-row"><span class="keycap wide">A</span><span>Steer left</span><span class="keycap">←</span></div>
           <div class="key-row"><span class="keycap wide">D</span><span>Steer right</span><span class="keycap">→</span></div>
-          <div class="key-row"><span class="keycap wide">SPACE</span><span>Handbrake</span></div>
+          <div class="key-row"><span class="keycap space">SPACE</span><span>Handbrake</span></div>
         </div>
-        <div class="tip-card"><span class="tip-spark">✳</span><div><strong>TAKE YOUR TIME</strong><p>Slow down and line up with the bay. A gentle touch is all you need.</p></div></div>
+        <div class="tip-card"><span class="tip-spark">✳</span><div><strong>TAKE YOUR TIME</strong><p>Line up with the bay and finish slowly. New cars unlock as you progress.</p></div></div>
+        <div class="garage">
+          <div class="garage-heading"><span>YOUR GARAGE</span><span id="garageCount">01 / 09</span></div>
+          <div class="car-list" id="carList" aria-label="Unlocked cars"></div>
+        </div>
         <div class="dash-footer"><span class="footer-dot"></span> ALL SYSTEMS OPERATIONAL</div>
       </aside>
     </section>
@@ -78,6 +84,6 @@
       <button data-control="brake" class="mobile-brake">BRAKE</button>
     </div>
   </main>
-  <script src="game.js"></script>
+  <script type="module" src="game.js"></script>
 </body>
 </html>
