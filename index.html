@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101a20">
+  <title>Park It — Precision Parking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Park It home"><span class="brand-mark">P</span><span>PARK<span class="brand-light">IT</span></span></a>
+      <div class="top-meta"><span class="live-dot"></span> DRIVER TRAINING / 01</div>
+      <button class="sound-button" id="soundButton" aria-label="Toggle sound" title="Toggle sound">♫ <span>SOUND</span></button>
+    </header>
+
+    <section class="game-layout" aria-label="Parking game">
+      <div class="game-main">
+        <div class="mission-head">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span> PRECISION DRIVING</div>
+            <h1>Normal <em>car parking.</em></h1>
+            <p class="subtitle">Easy does it. Get in the bay, keep it clean.</p>
+          </div>
+          <div class="level-chip"><span>LEVEL</span><strong id="levelNumber">01</strong><span class="level-total">/ 03</span></div>
+        </div>
+
+        <div class="scene-wrap" id="sceneWrap">
+          <canvas id="gameCanvas" aria-label="Top-down parking lot game"></canvas>
+          <div class="scene-label"><span class="map-pin">⌖</span> NORTH LOT <span class="label-divider">/</span> TRAINING GROUNDS</div>
+          <div class="scene-hint" id="sceneHint"><span class="hint-key">W</span><span class="hint-key">A</span><span class="hint-key">S</span><span class="hint-key">D</span> TO DRIVE</div>
+          <div class="toast" id="toast" aria-live="polite"></div>
+          <div class="level-complete" id="levelComplete" aria-live="polite">
+            <div class="complete-icon">✓</div><div class="complete-kicker">NICE PARKING</div><h2>Right on the mark.</h2><p id="completeText">Clean finish.</p><button id="nextButton" class="primary-button">NEXT LEVEL <span>→</span></button>
+          </div>
+        </div>
+
+        <div class="bottom-bar">
+          <div class="objective"><span class="objective-icon">◎</span><div><span class="objective-label">OBJECTIVE</span><strong>Park in the highlighted bay</strong></div></div>
+          <div class="bottom-actions"><button class="text-button" id="restartButton"><span class="restart-icon">↻</span> RESTART</button><button class="pause-button" id="pauseButton" aria-label="Pause game">Ⅱ</button></div>
+        </div>
+      </div>
+
+      <aside class="dashboard">
+        <div class="dash-top"><span class="dash-label">DASHBOARD</span><span class="dash-state"><i></i><span id="statusText">READY</span></span></div>
+        <div class="speed-panel">
+          <div class="speed-label">CURRENT SPEED <span>KM/H</span></div>
+          <div class="speed-reading"><span id="speedValue">0</span><span class="speed-unit">KM/H</span></div>
+          <div class="speed-track"><div id="speedFill"></div><span></span><span></span><span></span><span></span></div>
+          <div class="gear-row"><span>GEAR</span><strong id="gearValue">P</strong><span class="gear-caption" id="gearCaption">PARKED</span></div>
+        </div>
+        <div class="dash-stats">
+          <div class="stat-box"><span class="stat-label">TIME</span><strong id="timeValue">00:00</strong></div>
+          <div class="stat-box"><span class="stat-label">BUMPS</span><strong id="bumpValue">0<span class="bump-limit"> / 3</span></strong></div>
+        </div>
+        <div class="divider"></div>
+        <div class="guide-head"><span class="guide-icon">⌁</span><span>HOW TO DRIVE</span></div>
+        <div class="key-guide">
+          <div class="key-row"><span class="keycap wide">W</span><span>Accelerate</span><span class="keycap">↑</span></div>
+          <div class="key-row"><span class="keycap wide">S</span><span>Reverse</span><span class="keycap">↓</span></div>
+          <div class="key-row"><span class="keycap wide">A</span><span>Steer left</span><span class="keycap">←</span></div>
+          <div class="key-row"><span class="keycap wide">D</span><span>Steer right</span><span class="keycap">→</span></div>
+          <div class="key-row"><span class="keycap wide">SPACE</span><span>Handbrake</span></div>
+        </div>
+        <div class="tip-card"><span class="tip-spark">✳</span><div><strong>TAKE YOUR TIME</strong><p>Slow down and line up with the bay. A gentle touch is all you need.</p></div></div>
+        <div class="dash-footer"><span class="footer-dot"></span> ALL SYSTEMS OPERATIONAL</div>
+      </aside>
+    </section>
+    <footer class="page-footer"><span>© PARK IT DRIVING SCHOOL</span><span>BUILT FOR THE EVERYDAY DRIVER <b>✳</b></span></footer>
+
+    <div class="mobile-controls" aria-label="Touch driving controls">
+      <div class="steer-controls"><button data-control="left" aria-label="Steer left">←</button><button data-control="right" aria-label="Steer right">→</button></div>
+      <div class="pedal-controls"><button data-control="reverse" class="reverse-control">REV</button><button data-control="forward" class="forward-control">GO</button></div>
+      <button data-control="brake" class="mobile-brake">BRAKE</button>
+    </div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
